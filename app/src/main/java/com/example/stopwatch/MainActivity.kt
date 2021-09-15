@@ -3,16 +3,23 @@ package com.example.stopwatch
 import android.nfc.Tag
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.PersistableBundle
+import android.os.SystemClock
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.Chronometer
 
-class MainActivity : AppCompatActivity() {
+class MainActivity: AppCompatActivity() {
 
     lateinit var timer : Chronometer
     lateinit var startStopButton : Button
     lateinit var resetButton : Button
+    var isRunning = false
+    var stoppedTime = 0
+    var isStopped = false
+
 
     companion object{
         //all static constants go here
@@ -23,8 +30,57 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate: ")
         setContentView(R.layout.activity_main)
+
+        wireWidgits()
+
+        startStopButton.text= "Start"
+        resetButton.text = "Reset"
+
+        timer.base = SystemClock.elapsedRealtime()
+
+        startStopButton.setOnClickListener {
+            if(!isRunning){
+                startT()
+            }
+            else{
+                stopT()
+            }
+        }
+
+        resetButton.setOnClickListener {
+            timer.base = SystemClock.elapsedRealtime()
+            if(!isRunning){
+                stopT()
+            }
+            else{
+                startT()
+            }
+
+
+        }
+
     }
 
+    fun startT(){
+        newBase()
+        startStopButton.text = "Stop"
+        timer.start()
+        isRunning = true
+    }
+
+    fun stopT(){
+        stoppedTime = (SystemClock.elapsedRealtime() - timer.base).toInt()
+        startStopButton.text = "Start"
+        timer.stop()
+        isRunning = false
+    }
+
+    fun newBase(){
+        var curBase = timer.base
+        var curTime = SystemClock.elapsedRealtime() - curBase
+        timer.base = curTime - stoppedTime + curBase
+    }
+    
     override fun onStart() {
         super.onStart()
         Log.d(TAG, "onStart: ")
