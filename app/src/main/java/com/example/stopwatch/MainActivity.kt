@@ -17,13 +17,12 @@ class MainActivity: AppCompatActivity() {
     lateinit var startStopButton : Button
     lateinit var resetButton : Button
     var isRunning = false
-    var stoppedTime = 0
-    var isStopped = false
-
-
+    var displayedTime = 0L
+    
     companion object{
         //all static constants go here
         val TAG = "MainActivity"
+        val BUNDLE_DISPLAYED_TIME = "displayed time"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,10 +32,13 @@ class MainActivity: AppCompatActivity() {
 
         wireWidgits()
 
+        displayedTime = savedInstanceState?.getLong(BUNDLE_DISPLAYED_TIME) ?: 0L
+        timer.base = SystemClock.elapsedRealtime() - displayedTime
+
+
+
         startStopButton.text= "Start"
         resetButton.text = "Reset"
-
-        timer.base = SystemClock.elapsedRealtime()
 
         startStopButton.setOnClickListener {
             if(!isRunning){
@@ -48,6 +50,7 @@ class MainActivity: AppCompatActivity() {
         }
 
         resetButton.setOnClickListener {
+            displayedTime = 0L
             timer.base = SystemClock.elapsedRealtime()
             if(!isRunning){
                 stopT()
@@ -55,30 +58,43 @@ class MainActivity: AppCompatActivity() {
             else{
                 startT()
             }
-
-
         }
-
     }
 
     fun startT(){
-        newBase()
+        timer.base = SystemClock.elapsedRealtime() - displayedTime
         startStopButton.text = "Stop"
         timer.start()
         isRunning = true
     }
 
     fun stopT(){
-        stoppedTime = (SystemClock.elapsedRealtime() - timer.base).toInt()
+        updateDisplayedTime()
         startStopButton.text = "Start"
         timer.stop()
         isRunning = false
     }
 
-    fun newBase(){
+    /*fun newBase(){
         var curBase = timer.base
         var curTime = SystemClock.elapsedRealtime() - curBase
         timer.base = curTime - stoppedTime + curBase
+    }
+     */
+
+    fun updateDisplayedTime() {
+        if(isRunning) {
+            displayedTime = SystemClock.elapsedRealtime() - timer.base
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        updateDisplayedTime()
+        outState.putLong(BUNDLE_DISPLAYED_TIME, displayedTime)
+        if (isRunning){
+            timer.start()
+        }
     }
     
     override fun onStart() {
